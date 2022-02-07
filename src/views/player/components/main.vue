@@ -1,13 +1,14 @@
 <template>
   <el-row :gutter="20">
-    <h2>{{ roomId }}号教室</h2>
+    <h2>{{ room.roomName }}</h2>
+    <p>{{ room.introduction }}</p>
     {{ roomUrl }}
     <el-col :span="18">
-      <video id="rtc_media_player" src="" style="width:100%;height:400px" controls autoplay />
+      <video id="rtc_media_player" src="" style="width:100%;height:400px" controls autoplay/>
       <div class="btn-group">
-        <el-button type="primary" icon="el-icon-phone" circle />
+        <el-button type="primary" icon="el-icon-phone" circle/>
         <el-button type="success" circle>
-          <svg-icon icon-class="hand" />
+          <svg-icon icon-class="hand"/>
         </el-button>
         <div class="btn-group">
           <el-button type="warning" class="btn_publish" @click="startPlay">开始上课</el-button>
@@ -17,7 +18,7 @@
     <el-col :span="6">
       <div class="comment">
         <div class="comment-area">
-          <p v-for="i in chatList">{{ i }}</p>
+          <p v-for="i in chatList" :key="i.index">{{ i }}</p>
         </div>
         <div class="send-area">
           <el-input
@@ -39,42 +40,50 @@
 </template>
 
 <script>
-import { sendMsg } from '@/api/class'
+import { findRoom, sendMsg } from '@/api/class'
 
 export default {
   name: 'Main',
   data() {
     return {
       myMsg: '',
-      roomUrl: '',
-      form: {
+      liveUrl: undefined,
+      socketUrl: undefined,
+      room: {
         teacherId: '001',
         teacherName: '张三',
         classId: [],
         roomId: '',
         roomName: '',
-        introduction: ''
+        introduction: '',
+        state: ''
       },
-      myName: Math.round(Math.random() * 50),
-      roomId: this.$route.params.roomId,
+      roomId: this.$route.query.roomId,
       chatList: []
     }
   },
   watch: {
-    '$route'(to, from) {
-      this.getRoomId()
-    }
+
   },
   created() { // 页面创建生命周期函数
-    this.initWebSocket()
+    this.findRoomInfo()
   },
   beforeDestroy() { // 离开页面生命周期函数
     this.websocketclose()
   },
   methods: {
-    getRoomId() {
-      this.roomId = this.$route.params.roomId
+    findRoomInfo() {
       console.log(this.roomId)
+      findRoom(this.roomId).then(result => {
+        console.log(result.data)
+        const { name, note, state, liveUrl, teacherId } = result.data.room
+        this.room.roomName = name
+        this.room.introduction = note
+        this.room.state = state
+        this.liveUrl = liveUrl
+        this.room.teacherId = teacherId
+        this.initWebSocket()
+      })
     },
     initWebSocket: function() {
       this.roomUrl = 'ws://127.0.0.1:8080/websocket/' + this.roomId
@@ -119,13 +128,13 @@ export default {
     getRoomInfo() {
       // 存储房间信息并向后端申请教室
       // getRoomInfo(this.roomId).then(response => {
-      //   this.roomUrl = 'webrtc://localhost/live/' + this.form.roomId
+      //   this.roomUrl = 'webrtc://localhost/live/' + this.room.roomId
       // }).catch(response => {
       //
       // })
       //
       //
-      this.roomUrl = 'webrtc://localhost/live/' + this.form.roomId
+      this.roomUrl = 'webrtc://localhost/live/' + this.room.roomId
       setTimeout(() => {
         this.startPlay()
       }, 1000)
@@ -133,8 +142,10 @@ export default {
     startPlay() {
       var sdk = null
 
+      // eslint-disable-next-line no-undef
       sdk = new SrsRtcPlayerAsync()
 
+      // eslint-disable-next-line no-undef
       $('#rtc_media_player').prop('srcObject', sdk.stream)
 
       sdk.play(this.roomUrl).then(function(session) {
@@ -185,7 +196,6 @@ export default {
     .send-message {
       width: 100%;
       margin-bottom: 5px;
-      height: 50%;
     }
 
     .send {

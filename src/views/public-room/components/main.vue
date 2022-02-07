@@ -1,7 +1,7 @@
 <template>
   <el-row :gutter="20">
-    <h2>以下为'{{ listQuery.searchVal }}'的搜索结果：</h2>
     <el-col :span="20" :offset="2" class="result">
+      <div class="title">公开课</div>
       <el-row :gutter="20">
         <el-col v-for="n in roomList" :key="n.index" :span="6">
           <el-card :body-style="{ padding: '0px' }" class="room" @click.native="goRoom(n.id)">
@@ -10,12 +10,12 @@
               :src="url"
               fit="cover"
             />
-            <div style="padding: 14px;">
-              <span>{{ n.name }}</span>
+            <div class="card-body">
+              <span class="room-name">{{ n.name }}</span>
+              <p class="description">{{ n.note }}</p>
             </div>
           </el-card>
         </el-col>
-
       </el-row>
       <div style="text-align: right ;">
         <pagination
@@ -25,6 +25,7 @@
           @pagination="getList"
         />
       </div>
+
     </el-col>
 
   </el-row>
@@ -41,31 +42,39 @@ export default {
   data() {
     return {
       textarea: '',
+      searchVal: '',
       url: require('@/assets/images/cloudedu.png'),
       uid: store.getters.uid,
       roomList: [],
-      status: '',
-      total: 0,
       listQuery: {
         page: 1,
-        limit: 10,
-        searchVal: this.$route.query.searchVal
-      }
+        limit: 10
+      },
+      total: 0,
+      status: ''
     }
   },
   watch: {
     '$route'(to, from) {
-      this.getSearchVal()
+
     }
   },
   created() {
-    this.getSearchVal()
-    console.log(this.listQuery.searchVal)
+    this.getList()
   },
   methods: {
-    getSearchVal() {
-      this.listQuery.searchVal = this.$route.query.searchVal
-      this.getList()
+    goBack() {
+      this.$router.push({
+        name: '/index'
+      })
+    },
+    goRoom(n) {
+      this.$router.push({
+        path: '/player',
+        query: {
+          roomId: n
+        }
+      })
     },
     getList() {
       // 获取数据
@@ -77,14 +86,6 @@ export default {
       }).catch(res => {
 
       })
-    },
-    goRoom(n) {
-      this.$router.push({
-        path: '/player',
-        query: {
-          roomId: n
-        }
-      })
     }
   }
 }
@@ -92,9 +93,6 @@ export default {
 
 <style lang="scss" scoped>
 .result {
-  margin-top: 50px;
-  margin-bottom: 50px;
-
   .room {
     height: 150px;
     margin: 20px 0;
@@ -108,8 +106,30 @@ export default {
   }
 
   .title {
-    width: 100%;
+    border-bottom: 5px solid #0fa784;
+    padding: 10px;
+    display: inline-block;
+    font-size: 20px;
   }
+}
+
+.card-body {
+  padding: 10px 20px;
+
+  .room-name {
+    display: inline;
+    width: 100%;
+    margin-top: 10px;
+    font-size: 16px;
+    font-weight: bold;
+  }
+
+  .description {
+    padding-left: 1px;
+    font-size: 8px;
+    color: #909399;
+  }
+
 }
 
 </style>

@@ -13,6 +13,7 @@ export function getAllClassesOption() {
     method: 'get'
   })
 }
+
 export function getSocketUrl(roomId) {
   return request({
     url: '/websocket/getWebSocketUrl',
@@ -22,6 +23,7 @@ export function getSocketUrl(roomId) {
     }
   })
 }
+
 export function setRoomInfo(form) {
   return request({
     url: '/room/create',
@@ -53,6 +55,26 @@ export function sendMsg(roomId, msg) {
     params: {
       roomId: roomId,
       message: msg
+    }
+  })
+}
+
+export function closeRoom(roomId) {
+  return request({
+    url: '/room/close',
+    method: 'post',
+    params: {
+      roomId: roomId
+    }
+  })
+}
+
+export function findRoom(roomId) {
+  return request({
+    url: '/room/findRoomById',
+    method: 'post',
+    params: {
+      roomId: roomId
     }
   })
 }

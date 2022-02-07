@@ -71,42 +71,6 @@ export const constantRoutes = [
     hidden: true
   },
   {
-    path: '/index', // 首页
-    component: () => import('@/views/index/index'),
-    hidden: true
-  },
-  {
-    path: '/player', // 播放页
-    name: 'player',
-    component: () => import('@/views/player/index'),
-    hidden: true
-  },
-  {
-    path: '/publish', // 直播页
-    name: 'publish',
-    component: () => import('@/views/publish/index'),
-    hidden: true
-  },
-  {
-    path: '/search', // 搜索页,
-    name: 'search',
-    component: () => import('@/views/search/index'),
-    hidden: true
-  },
-  {
-    path: '/', // 后台首页
-    component: Layout,
-    redirect: '/dashboard',
-    children: [
-      {
-        path: 'dashboard',
-        component: () => import('@/views/dashboard/index'),
-        name: 'Dashboard',
-        meta: { title: 'dashboard', icon: 'dashboard', affix: true }
-      }
-    ]
-  },
-  {
     path: '/documentation',
     component: Layout,
     children: [
@@ -193,7 +157,41 @@ export const asyncRoutes = [
       }
     ]
   },
-
+  {
+    path: '/index', // 首页
+    component: () => import('@/views/index/index'),
+    hidden: true
+  },
+  {
+    path: '/player', // 播放页
+    name: 'player',
+    component: () => import('@/views/player/index'),
+    hidden: true
+  },
+  {
+    path: '/publish', // 直播页
+    name: 'publish',
+    component: () => import('@/views/publish/index'),
+    hidden: true
+  },
+  {
+    path: '/search', // 搜索页,
+    name: 'search',
+    component: () => import('@/views/search/index'),
+    hidden: true
+  },
+  {
+    path: '/find-room', // 加入的教室,
+    name: 'find-room',
+    component: () => import('@/views/find-room/index'),
+    hidden: true
+  },
+  {
+    path: '/public-room', // 公开课,
+    name: 'public-room',
+    component: () => import('@/views/public-room/index'),
+    hidden: true
+  },
   {
     path: '/icon',
     component: Layout,

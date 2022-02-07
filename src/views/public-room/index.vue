@@ -5,6 +5,7 @@
     </el-header>
     <el-col :span="18" :offset="3">
       <el-container>
+
         <el-main>
           <Main />
         </el-main>

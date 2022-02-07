@@ -1,12 +1,12 @@
 <template>
   <el-row :gutter="20">
+    <el-header>
+      <Nav/>
+    </el-header>
     <el-col :span="18" :offset="3">
       <el-container>
-        <el-header>
-          <Nav />
-        </el-header>
         <el-main>
-          <Main />
+          <Main/>
         </el-main>
         <el-footer>Footer</el-footer>
       </el-container>
@@ -24,10 +24,11 @@ export default {
     Nav,
     Main
   },
-  computed: {
-    message() {
-      return 'The webmaster said that you can not enter this page...'
-    }
+  data() {
+    return {}
+  },
+  computed: {},
+  created() {
   }
 }
 </script>

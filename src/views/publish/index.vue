@@ -1,10 +1,10 @@
 <template>
   <el-row :gutter="20">
+    <el-header>
+      <Nav />
+    </el-header>
     <el-col :span="18" :offset="3">
       <el-container>
-        <el-header>
-          <Nav />
-        </el-header>
         <el-main>
           <Main />
         </el-main>

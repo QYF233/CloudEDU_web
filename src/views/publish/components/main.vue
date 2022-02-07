@@ -7,9 +7,9 @@
     <p>课程介绍：{{ form.introduction }}</p>
     <p>直播地址：{{ liveUrl }}</p>
     <el-col :span="18">
-      <video id="rtc_media_player" src="" style="width:100%;height:400px" controls autoplay />
-      Audio: <span id="acodecs" /><br>
-      Video: <span id="vcodecs" />
+      <video id="rtc_media_player" src="" style="width:100%;height:400px" controls autoplay/>
+      Audio: <span id="acodecs"/><br>
+      Video: <span id="vcodecs"/>
       <div class="btn-group">
         <el-button type="warning" class="btn_publish" @click="startLive">{{ liveState }}</el-button>
       </div>
@@ -32,6 +32,7 @@
             @keyup.enter.native="sendMessage"
           />
           <el-button class="send" size="mini" type="primary" @click="sendMessage">发送</el-button>
+          <el-button class="closeRoom" size="mini" type="info" @click="closeRoom">关闭直播间</el-button>
         </div>
       </div>
     </el-col>
@@ -40,7 +41,7 @@
       <el-form :model="form">
         <el-form-item label="上课教师：" :label-width="formLabelWidth">
           <el-col :span="18">
-            <el-input v-model="form.teacherName" autocomplete="off" disabled />
+            <el-input v-model="form.teacherName" autocomplete="off" disabled/>
           </el-col>
         </el-form-item>
         <el-form-item label="上课班级：" :label-width="formLabelWidth">
@@ -57,12 +58,12 @@
         </el-form-item>
         <el-form-item label="课程名称：" :label-width="formLabelWidth">
           <el-col :span="18">
-            <el-input v-model="form.roomName" autocomplete="off" maxlength="10" />
+            <el-input v-model="form.roomName" autocomplete="off" maxlength="10"/>
           </el-col>
         </el-form-item>
         <el-form-item label="课程介绍：" :label-width="formLabelWidth">
           <el-col :span="18">
-            <el-input v-model="form.introduction" autocomplete="off" maxlength="10" />
+            <el-input v-model="form.introduction" autocomplete="off" maxlength="10"/>
           </el-col>
         </el-form-item>
       </el-form>
@@ -76,7 +77,7 @@
 </template>
 
 <script>
-import { getAllClassesOption, getSocketUrl, sendMsg, setRoomInfo } from '@/api/class'
+import { closeRoom, getAllClassesOption, getSocketUrl, sendMsg, setRoomInfo } from '@/api/class'
 import store from '@/store'
 
 export default {
@@ -106,6 +107,12 @@ export default {
   created() {
     this.dialogFormVisible = true
     this.init()
+  },
+  mounted() {
+    window.addEventListener('beforeunload', e => this.beforeunloadHandler(e))
+  },
+  destroyed() {
+    window.removeEventListener('beforeunload', e => this.beforeunloadHandler(e))
   },
   methods: {
     // 初始化
@@ -218,7 +225,22 @@ export default {
         console.log('报错')
         console.log(reason)
       })
-    }
+    },
+    closeRoom() {
+      closeRoom(this.roomId).then(res => {
+        console.log(res)
+      }).catch(res => {
+        console.log(res)
+      })
+    },
+    beforeunloadHandler() {
+      closeRoom(this.roomId).then(res => {
+        console.log(res)
+      }).catch(res => {
+        console.log(res)
+      })
+    },
+
   }
 
 }

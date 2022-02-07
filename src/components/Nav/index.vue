@@ -1,22 +1,33 @@
 <template>
-  <el-menu :default-active="activeIndex" class="el-menu-demo" mode="horizontal" @tab-click="handleClick">
+  <el-menu :default-active="$route.path" class="navbar" mode="horizontal" router>
     <div class="title">
-      <a href="index">云教</a>
+      <!--      <a href="index">云教</a>-->
+      <el-image
+        :src="logo"
+        fit="cover"
+        class="logo"
+      ></el-image>
     </div>
-    <el-menu-item index="1">
-      <router-link to="/index">首页</router-link>
+    <el-menu-item index="/index">
+      首页
     </el-menu-item>
-    <el-menu-item index="2">
-      <router-link to="/player">公开课</router-link>
+    <el-menu-item index="/public-room">
+      公开课
     </el-menu-item>
-    <el-menu-item index="3">
-      <router-link to="/publish">选修课</router-link>
+    <el-menu-item index="/find-room">
+      <div v-permission="['student']">已加入的教室</div>
+      <div v-permission="['teacher']">已创建的教室</div>
+      <div v-permission="['admin']">所有教室</div>
+    </el-menu-item>
+    <el-menu-item v-permission="['teacher','admin']" index="/publish">
+      开始直播
     </el-menu-item>
 
     <el-dropdown class="avatar-container right-menu-item hover-effect" trigger="click">
       <div class="avatar-wrapper">
         <img :src="avatar+'?imageView2/1/w/80/h/80'" class="user-avatar">
-        <i class="el-icon-caret-bottom" />
+<!--        <img src="https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif?imageView2/1/w/80/h/80" class="user-avatar">-->
+        <i class="el-icon-caret-bottom"/>
       </div>
       <el-dropdown-menu slot="dropdown">
         <router-link to="/profile/index">
@@ -24,19 +35,16 @@
             {{ $t('navbar.profile') }}
           </el-dropdown-item>
         </router-link>
-        <router-link to="/">
+        <router-link to="/index">
           <el-dropdown-item>
             {{ $t('navbar.dashboard') }}
           </el-dropdown-item>
         </router-link>
-        <a target="_blank" href="https://github.com/PanJiaChen/vue-element-admin/">
+        <router-link v-permission="['admin']" to="/admin">
           <el-dropdown-item>
-            {{ $t('navbar.github') }}
+            后台管理
           </el-dropdown-item>
-        </a>
-        <a target="_blank" href="https://panjiachen.github.io/vue-element-admin-site/#/">
-          <el-dropdown-item>Docs</el-dropdown-item>
-        </a>
+        </router-link>
         <el-dropdown-item divided @click.native="logout">
           <span style="display:block;">{{ $t('navbar.logOut') }}</span>
         </el-dropdown-item>
@@ -47,7 +55,7 @@
       placeholder="职位 | 地区 | 工作年限"
       @keyup.enter.native="onSearch"
     >
-      <i slot="prefix" class="el-input__icon el-icon-search" />
+      <i slot="prefix" class="el-input__icon el-icon-search"/>
     </el-input>
 
   </el-menu>
@@ -56,8 +64,10 @@
 <script>
 import { mapGetters } from 'vuex'
 import { logout } from '@/api/user'
+import permission from '@/directive/permission'
 
 export default {
+  directives: { permission },
   components: {},
   computed: {
     ...mapGetters([
@@ -68,37 +78,51 @@ export default {
   },
   data() {
     return {
-      activeIndex: '1',
+      logo: require('@/assets/images/cloudedu.png'),
+      activeIndex: '/index',
       searchVal: ''
     }
   },
+  created() {
+    this.checkAvatar()
+  },
   methods: {
-    handleClick(tab, event) {
-      console.log(tab.index)
-      // this.activeIndex = tab.index
+    checkAvatar() {
+      if (this.avatar == null) {
+        this.avatar = 'https://wpimg.wallstcn.com/f778738c-e4f8-4870-b634-56703b4acafe.gif'
+      }
     },
     onSearch() {
+      console.log('搜索', this.searchVal)
       this.$router.push({
-        path: '/search',
+        path: 'search',
         query: {
           searchVal: this.searchVal
         }
       })
     },
-    logout() {
-      logout().then(res => {
-        this.$message.success('退出成功')
-        this.$router.push({
-          path: '/login'
-        })
-      }).catch(e => {
 
-      })
+    async logout() {
+      await this.$store.dispatch('user/logout')
+      // await logout().then(res => {
+      //   this.$message.success('退出成功')
+      // }).catch(e => {
+      // })
+      this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
   }
 }
 </script>
 <style lang="scss" scoped>
+.navbar {
+  padding: 0 5%;
+}
+
+.logo {
+  height: 60px;
+  width: 100%;
+}
+
 .title {
   float: left;
   font-size: 32px;
