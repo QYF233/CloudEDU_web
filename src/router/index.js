@@ -175,6 +175,17 @@ export const asyncRoutes = [
     hidden: true
   },
   {
+    path: '/video', // 直播页
+    name: 'video',
+    component: () => import('@/views/publish/video'),
+    hidden: true
+  },{
+    path: '/live', // 直播页
+    name: 'live',
+    component: () => import('@/views/publish/live'),
+    hidden: true
+  },
+  {
     path: '/search', // 搜索页,
     name: 'search',
     component: () => import('@/views/search/index'),

@@ -19,6 +19,8 @@ import './permission' // permission control
 import './utils/error-log' // error log
 
 import * as filters from './filters' // global filters
+
+export const eventBus = new Vue()
 /**
  * If you don't want to use mock-server
  * you want to use MockJs for mock api
