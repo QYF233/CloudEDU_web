@@ -62,5 +62,3 @@ const nestedRouter = {
     }
   ]
 }
-
-export default nestedRouter

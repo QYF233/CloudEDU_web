@@ -89,7 +89,7 @@
 <script>
 // import { validUsername } from '@/utils/validate'
 import LangSelect from '@/components/LangSelect'
-import { getValidateCode, login } from '@/api/user'
+import { getValidateCode } from '@/api/user'
 
 export default {
   name: 'Login',
@@ -174,17 +174,9 @@ export default {
       this.$refs.loginForm.validate(valid => {
         if (valid) {
           this.loading = true
-          // login(this.loginForm).then(() => {
-          //
-          //   this.$router.push({ path: this.redirect || '/', query: this.otherQuery })
-          //   this.loading = false
-          //   console.log('success submit!!')
-          // }).catch(() => {
-          //   console.log('error submit!!')
-          //   this.loading = false
-          // })
           this.$store.dispatch('user/login', this.loginForm)
             .then(() => {
+              console.log(this.redirect)
               this.$router.push({ path: this.redirect || '/index', query: this.otherQuery })
               this.loading = false
               console.log('success submit!!')
