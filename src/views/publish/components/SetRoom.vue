@@ -1,21 +1,21 @@
 <template>
   <div>
     <el-collapse v-model="activeNames">
-      <el-collapse-item>
+      <el-collapse-item name="1">
         <template slot="title">
           <h3>初始化教室信息</h3>
         </template>
-        <el-form :model="form">
+        <el-form ref="roomInfo" :model="roomInfo" :rules="rules">
           <el-form-item label="上课教师：" :label-width="formLabelWidth">
             <el-col :span="18">
-              <el-input v-model="form.teacherName" autocomplete="off" disabled/>
+              <el-input v-model="roomInfo.teacherName" autocomplete="off" disabled/>
             </el-col>
           </el-form-item>
-          <el-form-item label="上课班级：" :label-width="formLabelWidth">
+          <el-form-item label="上课班级：" :label-width="formLabelWidth" prop="classId">
             <el-col :span="18">
               <el-cascader
                 :key="options.index"
-                v-model="form.classId"
+                v-model="roomInfo.classId"
                 placeholder="请输入班级名称"
                 :options="options"
                 :props="{ multiple: true }"
@@ -24,19 +24,19 @@
               />
             </el-col>
           </el-form-item>
-          <el-form-item label="课程名称：" :label-width="formLabelWidth">
+          <el-form-item label="课程名称：" :label-width="formLabelWidth" prop="roomName">
             <el-col :span="18">
-              <el-input v-model="form.roomName" autocomplete="off" maxlength="10"/>
+              <el-input v-model="roomInfo.roomName" autocomplete="off" maxlength="10"/>
             </el-col>
           </el-form-item>
-          <el-form-item label="课程介绍：" :label-width="formLabelWidth">
+          <el-form-item label="课程介绍：" :label-width="formLabelWidth" prop="introduction">
             <el-col :span="18">
-              <el-input v-model="form.introduction" autocomplete="off" maxlength="10"/>
+              <el-input v-model="roomInfo.introduction" autocomplete="off" maxlength="10"/>
             </el-col>
           </el-form-item>
           <el-form-item>
-            <el-button type="primary" @click="setRoomInfo">创建教室</el-button>
-            <el-button>取消</el-button>
+            <el-button type="success" @click="setRoomInfo('roomInfo')">创建教室</el-button>
+            <el-button @click="clean()">清空</el-button>
           </el-form-item>
         </el-form>
       </el-collapse-item>
@@ -53,17 +53,27 @@ export default {
   name: 'SetRoom',
   data() {
     return {
-      form: {
+      roomInfo: {
         teacherId: store.getters.uid,
         teacherName: store.getters.name,
         classId: [],
         roomId: '',
         roomName: '',
-        introduction: ''
+        introduction: '',
+        liveUrl: ''
       },
       options: [],
       formLabelWidth: '100px',
-      activeNames: [1]
+      activeNames: ['1'],
+      rules: {
+        roomName: [
+          { required: true, message: '请输入教室名（课程名）', trigger: 'blur' },
+          { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
+        ],
+        classId: [
+          { required: true, message: '请选择上课班级', trigger: 'change' }
+        ]
+      }
     }
   },
   created() {
@@ -72,6 +82,15 @@ export default {
   methods: {
     // 初始化
     init() {
+      const room = store.getters.roomInfo
+      this.roomInfo.roomId = room.roomId
+      this.roomInfo.roomName = room.roomName
+      this.roomInfo.introduction = room.introduction
+      this.roomInfo.liveUrl = room.liveUrl
+      console.log(room.roomId)
+      if (this.roomInfo.roomId !== '') {
+        eventBus.$emit('infoStatus', true)
+      }
       // 获取班级列表
       getAllClassesOption().then(response => {
         this.options = response.data
@@ -80,23 +99,48 @@ export default {
       })
     },
     // 初始化教室信息
-    setRoomInfo() {
-      // 处理班级信息
-      var classList = []
-      this.form.classId.forEach(function(value) {
-        classList.push(value[2])
+    setRoomInfo(roomInfo) {
+      const _this = this
+      this.$refs[roomInfo].validate((valid) => {
+        if (valid) {
+          // 处理班级信息
+          var classList = []
+          var tempClassList = this.roomInfo.classId
+          this.roomInfo.classId.forEach(function(value) {
+            classList.push(value[2])
+          })
+          this.roomInfo.classId = classList.toString()
+          // 存储房间信息并向后端申请教室
+          setRoomInfo(this.roomInfo).then(response => {
+            console.log(response)
+            _this.roomInfo.liveUrl = response.data.liveUrl
+            _this.roomInfo.roomId = response.data.roomId
+            _this.roomInfo.classId = tempClassList
+            console.log(response.data.roomId)
+            eventBus.$emit('infoStatus', true)
+            eventBus.$emit('setRoom', _this.roomInfo)
+            store.dispatch('roomInfo/setRoomInfo', this.roomInfo)
+            this.$message.success('初始化成功！')
+            this.activeNames = []
+          }).catch(response => {
+            console.log(response)
+          })
+        } else {
+          console.log('error submit!!')
+          return false
+        }
       })
-      this.form.classId = classList.toString()
-      // 存储房间信息并向后端申请教室
-      setRoomInfo(this.form).then(response => {
-        console.log(response)
-        this.liveUrl = response.data.liveUrl
-        this.roomId = response.data.roomId
-        eventBus.$emit('setRoomId', this.roomId)
-        eventBus.$emit('setRoom', this.form)
-      }).catch(response => {
-        console.log(response)
-      })
+    },
+    clean() {
+      this.roomInfo = {
+        teacherId: store.getters.uid,
+        teacherName: store.getters.name,
+        classId: [],
+        roomId: '',
+        roomName: '',
+        introduction: '',
+        liveUrl: ''
+      }
     }
   }
 

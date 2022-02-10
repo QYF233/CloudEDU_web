@@ -12,6 +12,9 @@ const getters = {
   introduction: state => state.user.introduction,
   roles: state => state.user.roles,
   permission_routes: state => state.permission.routes,
-  errorLogs: state => state.errorLog.logs
+  errorLogs: state => state.errorLog.logs,
+  roomInfo: state => state.roomInfo.roomInfo,
+  liveUrl: state => state.roomInfo.liveUrl,
+  socketUrl: state => state.roomInfo.socketUrl
 }
 export default getters

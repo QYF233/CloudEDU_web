@@ -151,8 +151,6 @@ export default {
     },
     // 拿到媒体流
     async getUserMedia() {
-      // log(`Requesting  video stream`)
-
       if ('mediaDevices' in navigator) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia(this.constraints)

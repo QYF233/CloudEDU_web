@@ -92,8 +92,11 @@ export function SrsRtcPublisherAsync() {
 
   // 关闭发布者。
   self.close = function() {
+    console.log('停止推流')
     self.pc && self.pc.close()
+    console.log('停止推流')
     self.pc = null
+    console.log('停止推流')
   }
 
   // 获取本地流时的回调。

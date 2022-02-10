@@ -3,6 +3,7 @@
     <el-row :gutter="20">
       <!--视频-->
       <video id="rtc_media_player" ref="video" src="" style="width:100%;height:400px" controls autoplay/>
+      {{ infoStatus }}
       <!--设置-->
       <el-form :inline="true" class="videoSettings">
         <el-form-item label="分辨率">
@@ -24,49 +25,57 @@
       <!--开始直播-->
       <div class="btn-group">
         <el-button type="info" plain class="btn_publish" @click="startCapture">屏幕共享</el-button>
-        <el-button type="success" plain class="btn_publish" @click="videoLoader">{{ liveState }}</el-button>
-        <el-button type="success" class="btn_publish" @click="startLive">{{ publishState }}</el-button>
+        <el-button type="success" plain class="btn_publish" @click="videoLoader">打开设备</el-button>
+        <el-button :type="liveState ? 'danger' : 'success'" class="btn_publish" @click="startLive">
+          {{ liveState ? '停止直播' : '开始直播' }}
+        </el-button>
+        {{ publishState }}
       </div>
     </el-row>
   </div>
 </template>
 
 <script>
-import { closeRoom, getAllClassesOption, getSocketUrl, sendMsg, setRoomInfo } from '@/api/class'
-import { SrsRtcPublisherAsync, SrsRtcPlayerAsync, SrsRtcFormatSenders } from '@/api/srs'
+import { closeRoom } from '@/api/class'
+import { SrsRtcPublisherAsync } from '@/api/srs'
 import store from '@/store'
 import { eventBus } from '@/main'
+import { mapGetters } from 'vuex'
 
 export default {
   name: 'Main',
   data() {
     return {
-      dialogFormVisible: false,
-      form: {
+      roomInfo: {
         teacherId: store.getters.uid,
         teacherName: store.getters.name,
         classId: [],
-        roomId: '',
+        roomId: store.getters.roomInfo.roomId,
         roomName: '',
-        introduction: ''
+        introduction: '',
+        liveUrl: ''
       },
-      formLabelWidth: '100px',
-      myMsg: '',
-      props: { multiple: true },
-      options: [],
-      liveUrl: '',
+      // liveUrl: '',
       socketUrl: '',
       roomId: '',
-      liveState: '打开设备',
-      publishState: '开始直播',
+      // 是否正在直播
+      liveState: false,
+      publishState: '',
+      // 消息列表
       chatList: [],
-
+      // 房间是否初始化
+      infoStatus: false,
+      // socket连接状态
+      socketState: false,
+      // 预加载
+      loadState: false,
       resolution: '',
       resolutionOptions: [
         { label: '超清', value: 1920 },
         { label: '高清', value: 1024 },
         { label: '标清', value: 640 }],
-      // sdk: new SrsRtcPublisherAsync(),
+
+      sdk: undefined,
 
       // videos
       myVideo: {},
@@ -112,27 +121,40 @@ export default {
     resolution: function(val) {
       this.changeResolution(val)
     },
-    audioDeviceId: function(val) {
+    audioDeviceId: function() {
       this.checkDevice()
     },
-    videoDeviceId: function(val) {
+    videoDeviceId: function() {
       this.checkDevice()
     }
   },
   async created() {
     // 获取设备信息
     await this.getDevices()
-    eventBus.$on('setRoomId', (res) => {
-      this.roomId = res
+    // 教室初始化状态
+    eventBus.$on('infoStatus', (infoStatus) => {
+      this.infoStatus = infoStatus
+    })
+    // 教室信息
+    eventBus.$on('setRoom', (roomInfo) => {
+      this.roomInfo = roomInfo
+    })
+    // 聊天室状态
+    eventBus.$on('socketState', (socketState) => {
+      this.socketState = socketState
     })
   },
   mounted() {
     this.myVideo = this.$refs.video
+    this.roomInfo = store.getters.roomInfo
+    if (this.roomInfo.roomId !== '') {
+      this.infoStatus = true
+    }
+    // console.log(this.roomInfo)
   },
   destroyed() {
   },
   methods: {
-
     // 前期准备：获取设备信息
     getDevices() {
       // 老的浏览器可能根本没有实现 mediaDevices，所以我们可以先设置一个空的对象
@@ -175,7 +197,7 @@ export default {
           text: deviceinfo.label,
           value: deviceinfo.deviceId
         }
-        console.log(deviceinfo)
+        // console.log(deviceinfo)
         if (deviceinfo.kind === 'audioinput') {
           _this.audioSourceOption.push(option)
         } else if (deviceinfo.kind === 'audiooutput') {
@@ -204,12 +226,30 @@ export default {
 
     // 中期：加载视频
     videoLoader() {
-      this.checkDevice()
+      const _this = this
+      if (this.checkDevice()) {
+        if (this.getUserMedia()) {
+          _this.loadState = true
+          return true
+        }
+      }
+      return false
     },
     // 开始直播
     startLive() {
-      this.checkDevice()
-      this.startPublish()
+      if (this.infoStatus) { // 房间初始化
+        eventBus.$emit('linkSocket', true)
+        if (this.loadState) {
+          this.startPublish()
+        } else {
+          if (this.videoLoader()) {
+            this.startPublish()
+          }
+        }
+      } else {
+        this.liveState = false
+        this.$message.error('请先初始化教室！')
+      }
     },
     // 检查设备
     checkDevice() {
@@ -225,8 +265,9 @@ export default {
       }
       if (!this.audioDeviceId && !this.videoDeviceId) {
         this.$message({ message: '摄像头和麦克风必须开启一个才能直播', type: 'warning' })
+        return false
       } else {
-        this.getUserMedia()
+        return true
       }
     },
     // 设置媒体流
@@ -236,33 +277,37 @@ export default {
           const stream = await navigator.mediaDevices.getUserMedia(this.constraints)
           this.myVideo.srcObject = stream
           this.localStream = stream
-          // log('Received local video stream')
+          return true
         } catch (error) {
-          // log(`getUserMedia error: ${error}`)
+          this.$message.error('获取设备失败！')
+          return false
         }
       }
     },
     // 推流
     startPublish() {
       const _this = this
-      var sdk = null
-      sdk = new SrsRtcPublisherAsync()
-
-      sdk.constraints = this.constraints
-
-      sdk.publish(this.liveUrl).then(function(session) {
+      // var sdk = null
+      this.sdk = new SrsRtcPublisherAsync()
+      this.sdk.constraints = this.constraints
+      // console.log(this.roomInfo.liveUrl)
+      this.sdk.publish(this.roomInfo.liveUrl).then(function(session) {
         console.log(session)
         _this.publishState = '推流中'
-        _this.$message.success('推流中')
+        _this.$message.success('推流中...')
+        this.liveState = true
       }).catch(function(reason) {
-        // this.sdk.close()
-        sdk.close()
+        _this.sdk.close()
         _this.publishState = '开始推流'
-        _this.$message.error('推流失败')
+        _this.$message.error('推流失败！')
         console.log(reason)
       })
     },
-
+    stopPublish() {
+      this.sdk.close()
+      this.liveState = false
+      // this.myVideo.srcObject = {}
+    },
     // 其他设置
     // 进行屏幕共享
     async startCapture() {
@@ -299,9 +344,11 @@ export default {
       // chrome://flags/#enable-experimental-web-platform-features
       // getDisplayMedia无法同时采集音频
       let captureStream = null
-
+      this.constraints.video.height = 1080
+      this.constraints.video.width = 1920
+      this.constraints.video.frameRate = 60
       try {
-        captureStream = await navigator.mediaDevices.getUserMedia(this.constraints)
+        captureStream = await navigator.mediaDevices.getDisplayMedia(this.constraints)
         if ('srcObject' in this.myVideo) {
           this.myVideo.srcObject = captureStream
         } else {

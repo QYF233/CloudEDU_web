@@ -26,21 +26,21 @@
 <script>
 import { getAllClassesOption, getSocketUrl, sendMsg, setRoomInfo } from '@/api/class'
 import store from '@/store'
+import { eventBus } from '@/main'
 
 export default {
   name: 'Socket',
   data() {
     return {
-      dialogFormVisible: false,
-      form: {
+      roomInfo: {
         teacherId: store.getters.uid,
         teacherName: store.getters.name,
         classId: [],
         roomId: '',
         roomName: '',
-        introduction: ''
+        introduction: '',
+        liveUrl: ''
       },
-      formLabelWidth: '100px',
       myMsg: '',
       props: { multiple: true },
       options: [],
@@ -49,99 +49,73 @@ export default {
       roomId: '',
       liveState: '开始录制',
       publishState: '开始直播',
-      chatList: []
-    }
-  },
-  watch: {
-    resolution: function(val) {
-      this.changeResolution(val)
+      chatList: [],
+      state: false,
+      linkSocket: false
     }
   },
   created() {
-    this.dialogFormVisible = true
-    this.init()
-  },
-  mounted() {
-    window.addEventListener('beforeunload', e => this.beforeunloadHandler(e))
-  },
-  destroyed() {
-    window.removeEventListener('beforeunload', e => this.beforeunloadHandler(e))
+    this.roomInfo = store.getters.roomInfo
+    eventBus.$on('linkSocket', (res) => {
+      this.state = res
+      console.log(res)
+      if (this.state) {
+        console.log('socket')
+        this.initWebSocket()
+      }
+    })
   },
   methods: {
-    // 初始化
-    init() {
-      // 获取班级列表
-      getAllClassesOption().then(response => {
-        // console.log(response.data)
-        this.options = response.data
-      }).catch(err => {
-        console.log(err)
-      })
-    },
-    // 设置教室信息
-    setRoomInfo() {
-      // 处理班级信息
-      var classList = []
-      this.form.classId.forEach(function(value) {
-        classList.push(value[2])
-      })
-      this.form.classId = classList.toString()
-      // 存储房间信息并向后端申请教室
-      setRoomInfo(this.form).then(response => {
-        console.log(response)
-        this.liveUrl = response.data.liveUrl
-        this.roomId = response.data.roomId
-      }).catch(response => {
-        console.log(response)
-      })
-
-      // this.liveUrl = 'webrtc://localhost/live/' + this.form.roomId
-
-      this.dialogFormVisible = false
-    },
-    startLive() {
-      this.initWebSocket()
-      // if (this.liveState) {
-      //   this.getVideo()
-      // }
-    },
     initWebSocket: function() {
-      getSocketUrl(this.roomId).then(res => {
-        this.socketUrl = res.data.socketUrl
-        console.log(this.socketUrl)
-        var url = this.socketUrl
-        console.log(url)
-        // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
-        this.websock = new WebSocket(url)
-        this.websock.onopen = this.websocketonopen
-        this.websock.onerror = this.websocketonerror
-        this.websock.onmessage = this.websocketonmessage
-        this.websock.onclose = this.websocketclose
-      })
-      // this.socketUrl = 'ws://127.0.0.1:8088/websocket/' + this.roomId
+      if (this.roomInfo.roomId !== '') {
+        getSocketUrl(this.roomInfo.roomId).then(res => {
+          this.socketUrl = res.data.socketUrl
+          const url = this.socketUrl
+          store.dispatch('roomInfo/setSocketUrl', this.socketUrl)
+          // WebSocket与普通的请求所用协议有所不同，ws等同于http，wss等同于https
+          this.websock = new WebSocket(url)
+          this.websock.onopen = this.websocketonopen
+          this.websock.onerror = this.websocketonerror
+          this.websock.onmessage = this.websocketonmessage
+          this.websock.onclose = this.websocketclose
+        })
+      }
     },
     websocketonopen: function() {
       console.log('WebSocket连接成功')
+      this.myMsg = '您已加入直播间'
+      sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
+        console.log(res)
+        this.myMsg = ''
+      }).catch(e => console.log)
+      console.log(this.textarea)
       this.liveState = '停止直播'
-      this.getVideo()
+      this.state = true
+      eventBus.$emit('socketState', true)
     },
     websocketonerror: function() {
+      this.state = false
       console.log('WebSocket连接发生错误')
-      this.liveState = false
+      eventBus.$emit('socketState', false)
     },
     websocketonmessage: function(e) {
-      console.log(e)
       this.chatList.push(e.data)
     },
     websocketclose: function(e) {
-      this.liveState = false
+      this.state = false
+      this.myMsg = '直播已关闭'
+      sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
+        console.log(res)
+        this.myMsg = ''
+      }).catch(e => console.log)
       console.log('连接关闭 (' + e.code + ')')
+      eventBus.$emit('socketState', false)
     },
     sendMessage() {
-      if (this.websock.onopen) {
+      if (this.state) {
         if (this.myMsg !== '') {
-          this.myMsg = this.form.teacherName + '：' + this.myMsg
-          sendMsg(this.roomId, this.myMsg).then(res => {
+          this.myMsg = this.roomInfo.teacherName + '：' + this.myMsg
+          sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
             console.log(res)
             this.myMsg = ''
           }).catch(e => console.log)
@@ -153,7 +127,6 @@ export default {
         console.log('您未连接')
       }
     }
-
   }
 
 }
