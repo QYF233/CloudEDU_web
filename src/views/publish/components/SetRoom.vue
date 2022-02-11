@@ -79,24 +79,32 @@ export default {
   created() {
     this.init()
   },
+  mounted() {
+    if (this.roomInfo.roomId !== '' && this.roomInfo.roomId !== undefined) {
+      eventBus.$emit('infoStatus', true)
+      console.log("chuandi")
+      eventBus.$emit('setRoom', this.roomInfo)
+      this.activeNames = []
+    }
+  },
   methods: {
     // 初始化
     init() {
+      // 如果房间已经初始化
       const room = store.getters.roomInfo
+      console.log(room)
       this.roomInfo.roomId = room.roomId
       this.roomInfo.roomName = room.roomName
       this.roomInfo.introduction = room.introduction
       this.roomInfo.liveUrl = room.liveUrl
-      console.log(room.roomId)
-      if (this.roomInfo.roomId !== '') {
-        eventBus.$emit('infoStatus', true)
-      }
+
       // 获取班级列表
       getAllClassesOption().then(response => {
         this.options = response.data
       }).catch(err => {
         console.log(err)
       })
+
     },
     // 初始化教室信息
     setRoomInfo(roomInfo) {
@@ -105,18 +113,14 @@ export default {
         if (valid) {
           // 处理班级信息
           var classList = []
-          var tempClassList = this.roomInfo.classId
           this.roomInfo.classId.forEach(function(value) {
             classList.push(value[2])
           })
           this.roomInfo.classId = classList.toString()
           // 存储房间信息并向后端申请教室
           setRoomInfo(this.roomInfo).then(response => {
-            console.log(response)
             _this.roomInfo.liveUrl = response.data.liveUrl
             _this.roomInfo.roomId = response.data.roomId
-            _this.roomInfo.classId = tempClassList
-            console.log(response.data.roomId)
             eventBus.$emit('infoStatus', true)
             eventBus.$emit('setRoom', _this.roomInfo)
             store.dispatch('roomInfo/setRoomInfo', this.roomInfo)

@@ -65,6 +65,7 @@
 import { mapGetters } from 'vuex'
 import { logout } from '@/api/user'
 import permission from '@/directive/permission'
+import store from '@/store'
 
 export default {
   directives: { permission },
@@ -108,6 +109,7 @@ export default {
       //   this.$message.success('退出成功')
       // }).catch(e => {
       // })
+      await store.dispatch('roomInfo/setRoomInfo', {})
       this.$router.push(`/login?redirect=${this.$route.fullPath}`)
     }
   }

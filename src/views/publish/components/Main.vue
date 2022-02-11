@@ -2,12 +2,17 @@
   <div>
     <el-row :gutter="20">
       <!--视频-->
-      <video id="rtc_media_player" ref="video" src="" style="width:100%;height:400px" controls autoplay/>
-      {{ infoStatus }}
+      <div style="height:450px">
+        <video id="rtc_media_player" ref="video" src="" style="width:100%;height:400px" controls autoplay/>
+        {{ infoStatus }}
+        <Time></Time>
+        {{ publishState }}
+      </div>
       <!--设置-->
       <el-form :inline="true" class="videoSettings">
         <el-form-item label="分辨率">
           <el-select v-model="resolution" placeholder="请选择分辨率">
+
             <el-option v-for="(item,index) in resolutionOptions" :key="index" :label="item.label" :value="item.value"/>
           </el-select>
         </el-form-item>
@@ -26,10 +31,11 @@
       <div class="btn-group">
         <el-button type="info" plain class="btn_publish" @click="startCapture">屏幕共享</el-button>
         <el-button type="success" plain class="btn_publish" @click="videoLoader">打开设备</el-button>
-        <el-button :type="liveState ? 'danger' : 'success'" class="btn_publish" @click="startLive">
+        <el-button :loading="loading" :type="liveState ? 'danger' : 'success'" class="btn_publish"
+                   @click="startLive"
+        >
           {{ liveState ? '停止直播' : '开始直播' }}
         </el-button>
-        {{ publishState }}
       </div>
     </el-row>
   </div>
@@ -40,10 +46,13 @@ import { closeRoom } from '@/api/class'
 import { SrsRtcPublisherAsync } from '@/api/srs'
 import store from '@/store'
 import { eventBus } from '@/main'
-import { mapGetters } from 'vuex'
+import Time from '@/components/Time/Time'
 
 export default {
   name: 'Main',
+  components: {
+    Time
+  },
   data() {
     return {
       roomInfo: {
@@ -61,6 +70,7 @@ export default {
       // 是否正在直播
       liveState: false,
       publishState: '',
+      loading: false,
       // 消息列表
       chatList: [],
       // 房间是否初始化
@@ -69,6 +79,8 @@ export default {
       socketState: false,
       // 预加载
       loadState: false,
+      // 计时器
+      time: '',
       resolution: '',
       resolutionOptions: [
         { label: '超清', value: 1920 },
@@ -81,9 +93,9 @@ export default {
       myVideo: {},
 
       // source
-      audioSourceOption: [],
-      audioOutputOption: [],
-      videoSourceOption: [],
+      audioSourceOption: [{ text: '无麦克风', value: '' }],
+      audioOutputOption: [{ text: '无麦克风', value: '' }],
+      videoSourceOption: [{ text: '无摄像头', value: '' }],
 
       // 设备id
       audioDeviceId: '',
@@ -129,8 +141,7 @@ export default {
     }
   },
   async created() {
-    // 获取设备信息
-    await this.getDevices()
+    console.log('222')
     // 教室初始化状态
     eventBus.$on('infoStatus', (infoStatus) => {
       this.infoStatus = infoStatus
@@ -143,13 +154,16 @@ export default {
     eventBus.$on('socketState', (socketState) => {
       this.socketState = socketState
     })
+    // 获取设备信息
+    await this.getDevices()
   },
   mounted() {
     this.myVideo = this.$refs.video
-    this.roomInfo = store.getters.roomInfo
-    if (this.roomInfo.roomId !== '') {
-      this.infoStatus = true
-    }
+
+    // this.roomInfo = store.getters.roomInfo
+    // if (this.roomInfo.roomId !== '') {
+    //   this.infoStatus = true
+    // }
     // console.log(this.roomInfo)
   },
   destroyed() {
@@ -221,7 +235,7 @@ export default {
         this.constraints.video.height = 480
       }
       console.log('更换分辨率', this.constraints)
-      this.checkDevice()
+      this.videoLoader()
     },
 
     // 中期：加载视频
@@ -233,22 +247,31 @@ export default {
           return true
         }
       }
+      this.loading = false
       return false
     },
     // 开始直播
     startLive() {
-      if (this.infoStatus) { // 房间初始化
-        eventBus.$emit('linkSocket', true)
-        if (this.loadState) {
-          this.startPublish()
-        } else {
-          if (this.videoLoader()) {
-            this.startPublish()
-          }
-        }
+      if (this.liveState) {
+        this.stopPublish()
       } else {
-        this.liveState = false
-        this.$message.error('请先初始化教室！')
+        this.loading = true
+        if (this.infoStatus) { // 房间初始化
+          if (!this.socketState) {
+            eventBus.$emit('linkSocket', true)
+          }
+          if (this.loadState) {
+            this.startPublish()
+          } else {
+            if (this.videoLoader()) {
+              this.startPublish()
+            }
+          }
+        } else {
+          this.liveState = false
+          this.loading = false
+          this.$message.error('请先初始化教室！')
+        }
       }
     },
     // 检查设备
@@ -259,7 +282,11 @@ export default {
         this.constraints.audio = false
       }
       if (this.videoDeviceId) {
-        this.constraints.video = { deviceId: { exact: this.videoDeviceId } }
+        this.constraints.video = {
+          deviceId: { exact: this.videoDeviceId },
+          width: this.constraints.video.width,
+          height: this.constraints.video.height
+        }
       } else {
         this.constraints.video = false
       }
@@ -290,22 +317,27 @@ export default {
       // var sdk = null
       this.sdk = new SrsRtcPublisherAsync()
       this.sdk.constraints = this.constraints
-      // console.log(this.roomInfo.liveUrl)
+      console.log(this.sdk.constraints)
       this.sdk.publish(this.roomInfo.liveUrl).then(function(session) {
         console.log(session)
         _this.publishState = '推流中'
         _this.$message.success('推流中...')
-        this.liveState = true
+        eventBus.$emit('timeStart', true)
+        _this.liveState = true
+        _this.loading = false
       }).catch(function(reason) {
         _this.sdk.close()
-        _this.publishState = '开始推流'
+        _this.publishState = ''
         _this.$message.error('推流失败！')
+        _this.loading = false
         console.log(reason)
       })
     },
     stopPublish() {
       this.sdk.close()
       this.liveState = false
+      this.publishState = ''
+      eventBus.$emit('timeStart', false)
       // this.myVideo.srcObject = {}
     },
     // 其他设置
@@ -344,6 +376,9 @@ export default {
       // chrome://flags/#enable-experimental-web-platform-features
       // getDisplayMedia无法同时采集音频
       let captureStream = null
+      if (this.constraints.video === false) {
+        this.constraints.video = true
+      }
       this.constraints.video.height = 1080
       this.constraints.video.width = 1920
       this.constraints.video.frameRate = 60
