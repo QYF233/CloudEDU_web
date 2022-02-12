@@ -1,17 +1,30 @@
 <template>
   <el-row :gutter="20">
     <el-header>
-      <Nav />
+      <Nav/>
     </el-header>
     <el-col :span="18" :offset="3">
       <el-container>
         <el-main>
-          <Main />
+          <!--初始化教室-->
+          <set-room/>
+          <h2>{{ form.roomName }}</h2>
+          <el-row :gutter="20">
+            <el-col :span="18">
+              <!--视频区-->
+              <Main/>
+            </el-col>
+            <el-col :span="6">
+              <!--聊天区-->
+              <Socket/>
+            </el-col>
+          </el-row>
+          <!--          <Main/>-->
         </el-main>
         <el-footer>
-          <div class="appendix">
-            附件区
-          </div>
+          <!--          <div class="appendix">-->
+          <!--            附件区-->
+          <!--          </div>-->
         </el-footer>
       </el-container>
     </el-col>
@@ -20,19 +33,38 @@
 
 <script>
 import Nav from '@/components/Nav'
-import Main from './components/main'
+import Main from './components/Main'
+import SetRoom from './components/SetRoom'
+import Socket from './components/Socket'
+import { eventBus } from '@/main'
+import store from '@/store'
 
 export default {
   name: 'Player',
   components: {
     Nav,
-    Main
+    Main,
+    SetRoom,
+    Socket
   },
-  computed: {
-    message() {
-      return 'The webmaster said that you can not enter this page...'
+  data() {
+    return {
+      form: {
+        uid: store.getters.uid,
+        username: store.getters.name,
+        classId: [],
+        roomId: '',
+        roomName: '',
+        introduction: ''
+      }
     }
-  }
+  },
+  created() {
+    eventBus.$on('setRoom', (res) => {
+      this.form = res
+    })
+  },
+  methods: {}
 }
 </script>
 <style lang="scss">
@@ -54,7 +86,8 @@ export default {
 .el-carousel__item:nth-child(2n+1) {
   background-color: #d3dce6;
 }
-.appendix{
+
+.appendix {
   width: 100%;
   height: 100px;
   line-height: 100px;

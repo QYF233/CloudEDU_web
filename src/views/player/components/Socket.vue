@@ -55,15 +55,12 @@ export default {
     }
   },
   created() {
-    this.roomInfo = store.getters.roomInfo
-    console.log(this.roomInfo)
-    eventBus.$on('linkSocket', (res) => {
-      this.state = res
-      console.log(res)
-      if (this.state) {
-        console.log('socket')
-        this.initWebSocket()
-      }
+    // 教室信息
+    eventBus.$on('setRoom', (roomInfo) => {
+      this.socketUrl = roomInfo.socketUrl
+      this.roomInfo = roomInfo
+      console.log(roomInfo)
+      this.initWebSocket()
     })
   },
   methods: {
@@ -86,7 +83,7 @@ export default {
       console.log('WebSocket连接成功')
       this.myMsg = '您已加入直播间'
       sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-        console.log(res)
+        // console.log(res)
         this.myMsg = ''
       }).catch(e => console.log)
       console.log(this.textarea)
@@ -101,6 +98,7 @@ export default {
     },
     websocketonmessage: function(e) {
       this.chatList.push(e.data)
+      console.log(e.data)
     },
     websocketclose: function(e) {
       this.state = false
@@ -117,10 +115,9 @@ export default {
         if (this.myMsg !== '') {
           this.myMsg = this.roomInfo.username + '：' + this.myMsg
           sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-            console.log(res)
+            // console.log(res)
             this.myMsg = ''
           }).catch(e => console.log)
-          console.log(this.textarea)
         } else {
           this.$message.error('输入内容不能为空')
         }

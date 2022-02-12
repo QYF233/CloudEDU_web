@@ -8,7 +8,7 @@
         <el-form ref="roomInfo" :model="roomInfo" :rules="rules">
           <el-form-item label="上课教师：" :label-width="formLabelWidth">
             <el-col :span="18">
-              <el-input v-model="roomInfo.teacherName" autocomplete="off" disabled/>
+              <el-input v-model="roomInfo.username" autocomplete="off" disabled/>
             </el-col>
           </el-form-item>
           <el-form-item label="上课班级：" :label-width="formLabelWidth" prop="classId">
@@ -54,8 +54,8 @@ export default {
   data() {
     return {
       roomInfo: {
-        teacherId: store.getters.uid,
-        teacherName: store.getters.name,
+        uid: store.getters.uid,
+        username: store.getters.name,
         classId: [],
         roomId: '',
         roomName: '',
@@ -137,8 +137,8 @@ export default {
     },
     clean() {
       this.roomInfo = {
-        teacherId: store.getters.uid,
-        teacherName: store.getters.name,
+        uid: store.getters.uid,
+        username: store.getters.name,
         classId: [],
         roomId: '',
         roomName: '',

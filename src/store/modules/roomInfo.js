@@ -1,7 +1,7 @@
 const state = {
   roomInfo: {
-    teacherId: '',
-    teacherName: '',
+    uid: '',
+    username: '',
     classId: [],
     roomId: '',
     roomName: '',
@@ -14,9 +14,9 @@ const state = {
 
 const mutations = {
   SET_ROOM_INFO: (state, roomInfo) => {
-    const { teacherId, teacherName, classId, roomId, roomName, introduction, liveUrl } = roomInfo
-    state.roomInfo.teacherId = teacherId
-    state.roomInfo.teacherName = teacherName
+    const { uid, username, classId, roomId, roomName, introduction, liveUrl } = roomInfo
+    state.roomInfo.uid = uid
+    state.roomInfo.username = username
     state.roomInfo.classId = classId
     state.roomInfo.roomId = roomId
     state.roomInfo.roomName = roomName

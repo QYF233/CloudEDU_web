@@ -50,8 +50,8 @@ export default {
   data() {
     return {
       form: {
-        teacherId: store.getters.uid,
-        teacherName: store.getters.name,
+        uid: store.getters.uid,
+        username: store.getters.name,
         classId: [],
         roomId: '',
         roomName: '',

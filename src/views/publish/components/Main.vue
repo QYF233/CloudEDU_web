@@ -56,8 +56,8 @@ export default {
   data() {
     return {
       roomInfo: {
-        teacherId: store.getters.uid,
-        teacherName: store.getters.name,
+        uid: store.getters.uid,
+        username: store.getters.name,
         classId: [],
         roomId: store.getters.roomInfo.roomId,
         roomName: '',
@@ -149,6 +149,7 @@ export default {
     // 教室信息
     eventBus.$on('setRoom', (roomInfo) => {
       this.roomInfo = roomInfo
+      console.log(roomInfo)
     })
     // 聊天室状态
     eventBus.$on('socketState', (socketState) => {

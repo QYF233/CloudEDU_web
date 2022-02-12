@@ -24,16 +24,16 @@ export function getSocketUrl(roomId) {
   })
 }
 
-export function setRoomInfo(form) {
+export function setRoomInfo(roomInfo) {
   return request({
     url: '/room/create',
     method: 'post',
     params: {
       // roomId: roomId,
-      name: form.roomName,
-      note: form.introduction,
-      classes: form.classId,
-      teacherId: form.teacherId
+      name: roomInfo.roomName,
+      note: roomInfo.introduction,
+      classes: roomInfo.classId,
+      uid: roomInfo.uid
     }
   })
 }
@@ -75,6 +75,17 @@ export function findRoom(roomId) {
     method: 'post',
     params: {
       roomId: roomId
+    }
+  })
+}
+
+export function checkUserToRoom(roomId, uid) {
+  return request({
+    url: '/room/checkUserToRoom',
+    method: 'post',
+    params: {
+      roomId: roomId,
+      uid: uid
     }
   })
 }
