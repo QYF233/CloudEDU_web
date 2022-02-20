@@ -39,7 +39,7 @@ export function SrsRtcPublisherAsync() {
   // or any other information, will pass-by in the query:
   //      webrtc://r.ossrs.net/live/livestream?vhost=xxx
   //      webrtc://r.ossrs.net/live/livestream?token=xxx
-  self.publish = async function(url) {
+  self.publish = async function(url,stream) {
     var conf = self.__internal.prepareUrl(url)
     self.pc.addTransceiver('audio', { direction: 'sendonly' })
     self.pc.addTransceiver('video', { direction: 'sendonly' })
@@ -47,9 +47,9 @@ export function SrsRtcPublisherAsync() {
     if (!navigator.mediaDevices && window.location.protocol === 'http:' && window.location.hostname !== 'localhost') {
       throw new Error(`Please use HTTPS or localhost to publish, read https://github.com/ossrs/srs/issues/2762#issuecomment-983147576`)
     }
-    var stream = await navigator.mediaDevices.getUserMedia(self.constraints)
-
-    // @see https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addStream#Migrating_to_addTrack
+    // var stream = await navigator.mediaDevices.getUserMedia(self.constraints)
+    //
+    // // @see https://developer.mozilla.org/en-US/docs/Web/API/RTCPeerConnection/addStream#Migrating_to_addTrack
     stream.getTracks().forEach(function(track) {
       self.pc.addTrack(track)
 

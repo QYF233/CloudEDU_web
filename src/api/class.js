@@ -40,7 +40,7 @@ export function setRoomInfo(roomInfo) {
 
 export function getRoomInfo(roomId) {
   return request({
-    url: '/live/getRoomInfo',
+    url: '/room/findRoomById',
     params: {
       roomId: roomId
     },

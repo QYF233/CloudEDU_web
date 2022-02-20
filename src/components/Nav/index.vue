@@ -52,7 +52,7 @@
     </el-dropdown>
     <el-input
       v-model="searchVal"
-      placeholder="职位 | 地区 | 工作年限"
+      placeholder="课程名 | 教室名 | 班级名"
       @keyup.enter.native="onSearch"
     >
       <i slot="prefix" class="el-input__icon el-icon-search"/>

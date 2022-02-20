@@ -59,7 +59,7 @@ export default {
     eventBus.$on('setRoom', (roomInfo) => {
       this.socketUrl = roomInfo.socketUrl
       this.roomInfo = roomInfo
-      console.log(roomInfo)
+      // console.log(roomInfo)
       this.initWebSocket()
     })
   },
@@ -86,7 +86,7 @@ export default {
         // console.log(res)
         this.myMsg = ''
       }).catch(e => console.log)
-      console.log(this.textarea)
+      // console.log(this.textarea)
       this.liveState = '停止直播'
       this.state = true
       eventBus.$emit('socketState', true)
@@ -98,16 +98,16 @@ export default {
     },
     websocketonmessage: function(e) {
       this.chatList.push(e.data)
-      console.log(e.data)
+      // console.log(e.data)
     },
     websocketclose: function(e) {
       this.state = false
       this.myMsg = '直播已关闭'
       sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-        console.log(res)
+        // console.log(res)
         this.myMsg = ''
       }).catch(e => console.log)
-      console.log('连接关闭 (' + e.code + ')')
+      // console.log('连接关闭 (' + e.code + ')')
       eventBus.$emit('socketState', false)
     },
     sendMessage() {

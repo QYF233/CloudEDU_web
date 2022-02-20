@@ -26,12 +26,12 @@
           </el-form-item>
           <el-form-item label="课程名称：" :label-width="formLabelWidth" prop="roomName">
             <el-col :span="18">
-              <el-input v-model="roomInfo.roomName" autocomplete="off" maxlength="10"/>
+              <el-input v-model="roomInfo.roomName" autocomplete="off" maxlength="15"/>
             </el-col>
           </el-form-item>
           <el-form-item label="课程介绍：" :label-width="formLabelWidth" prop="introduction">
             <el-col :span="18">
-              <el-input v-model="roomInfo.introduction" autocomplete="off" maxlength="10"/>
+              <el-input v-model="roomInfo.introduction" autocomplete="off" maxlength="30"/>
             </el-col>
           </el-form-item>
           <el-form-item>
@@ -45,7 +45,7 @@
 </template>
 
 <script>
-import { getAllClassesOption, setRoomInfo } from '@/api/class'
+import { getAllClassesOption, getRoomInfo, setRoomInfo } from '@/api/class'
 import store from '@/store'
 import { eventBus } from '@/main'
 
@@ -68,7 +68,7 @@ export default {
       rules: {
         roomName: [
           { required: true, message: '请输入教室名（课程名）', trigger: 'blur' },
-          { min: 2, max: 10, message: '长度在 2 到 10 个字符', trigger: 'blur' }
+          { min: 2, max: 15, message: '长度在 2 到 15 个字符', trigger: 'blur' }
         ],
         classId: [
           { required: true, message: '请选择上课班级', trigger: 'change' }
@@ -77,22 +77,40 @@ export default {
     }
   },
   created() {
-    this.init()
+    this.judge()
   },
   mounted() {
     if (this.roomInfo.roomId !== '' && this.roomInfo.roomId !== undefined) {
       eventBus.$emit('infoStatus', true)
-      console.log("chuandi")
+      // console.log('chuandi')
       eventBus.$emit('setRoom', this.roomInfo)
       this.activeNames = []
     }
   },
   methods: {
+    judge() {
+      var id = this.$route.params.roomId
+      // console.log('id:' + id)
+      if (id != null) {
+        this.roomInfo.roomId = id
+        getRoomInfo(id).then(res => {
+
+          var { room } = res.data
+          console.log('info:', room)
+          this.roomInfo.roomId = room.id
+          this.roomInfo.roomName = room.name
+          this.roomInfo.introduction = room.note
+          this.roomInfo.liveUrl = room.liveUrl
+        })
+      } else {
+        this.init()
+      }
+    },
     // 初始化
     init() {
       // 如果房间已经初始化
       const room = store.getters.roomInfo
-      console.log(room)
+      // console.log(room)
       this.roomInfo.roomId = room.roomId
       this.roomInfo.roomName = room.roomName
       this.roomInfo.introduction = room.introduction
@@ -104,7 +122,6 @@ export default {
       }).catch(err => {
         console.log(err)
       })
-
     },
     // 初始化教室信息
     setRoomInfo(roomInfo) {
@@ -130,7 +147,7 @@ export default {
             console.log(response)
           })
         } else {
-          console.log('error submit!!')
+          // console.log('error submit!!')
           return false
         }
       })

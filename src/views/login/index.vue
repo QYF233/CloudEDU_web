@@ -11,9 +11,10 @@
 
       <div class="title-container">
         <h3 class="title">
-          {{ $t('login.title') }}
+<!--          {{ $t('login.title') }}-->
+          云教平台
         </h3>
-        <lang-select class="set-language" />
+<!--        <lang-select class="set-language" />-->
       </div>
 
       <el-form-item prop="id">

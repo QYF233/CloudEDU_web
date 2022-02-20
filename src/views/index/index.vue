@@ -8,7 +8,7 @@
         <el-main>
           <Main/>
         </el-main>
-        <el-footer>Footer</el-footer>
+        <el-footer></el-footer>
       </el-container>
     </el-col>
   </el-row>

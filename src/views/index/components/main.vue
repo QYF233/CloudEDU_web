@@ -1,8 +1,12 @@
 <template>
   <div>
     <el-carousel indicator-position="outside">
-      <el-carousel-item v-for="item in 4" :key="item">
-        <h3>{{ item }}</h3>
+      <el-carousel-item v-for="(item,index) in items" :key="index">
+        <el-image
+          style="width: 100%; height: 100%"
+          :src="item.url"
+          fit="contain"
+        />
       </el-carousel-item>
     </el-carousel>
 
@@ -13,7 +17,7 @@
             <span>{{ status }}</span>
           </div>
           <div class="box">
-            <div v-for="n in joinRoomList.slice(0, 4)" :key="n.index" class="classBox">
+            <div v-for="(n,index) in joinRoomList.slice(0, 4)" :key="index" class="classBox" @click="toPlayer(n.id)">
               <el-image
                 :src="url"
                 fit="cover"
@@ -64,6 +68,10 @@ export default {
     return {
       url: require('@/assets/images/cloudedu.png'),
       joinRoomList: [],
+      items: [{ name: '', url: require('@/assets/images/cloudedu.png') }, {
+        name: '',
+        url: require('@/assets/images/cloudedu.png')
+      }],
       status: '',
       more: false
     }
@@ -87,12 +95,20 @@ export default {
     },
     setRoomList(res) {
       this.joinRoomList = res.data.joinRoomList
-      console.log(this.joinRoomList.length)
+      console.log(this.joinRoomList)
       if (this.joinRoomList.length > 4) {
         this.more = true
       } else {
         this.more = false
       }
+    },
+    toPlayer(id) {
+      this.$router.push({
+        path: 'player',
+        query: {
+          roomId: id
+        }
+      })
     }
   }
 }

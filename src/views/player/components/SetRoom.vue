@@ -1,5 +1,5 @@
 <template>
-  <div/>
+  <div />
 </template>
 
 <script>
@@ -32,16 +32,15 @@ export default {
     // 初始化
     init() {
       // 如果房间已经初始化
-      console.log(this.roomInfo.roomId)
+      // console.log(this.roomInfo.roomId)
       checkUserToRoom(this.roomInfo.roomId, this.roomInfo.uid).then(res => {
-        const { roomInfo } = res.data
-        this.roomInfo.roomId = roomInfo.id
-        this.roomInfo.roomName = roomInfo.roomName
-        this.roomInfo.introduction = roomInfo.introduction
-        this.roomInfo.liveUrl = roomInfo.liveUrl
-
         if (res.data.flag) {
-          console.log(this.roomInfo)
+          const { roomInfo } = res.data
+          this.roomInfo.roomId = roomInfo.id
+          this.roomInfo.roomName = roomInfo.roomName
+          this.roomInfo.introduction = roomInfo.introduction
+          this.roomInfo.liveUrl = roomInfo.liveUrl
+          // console.log(this.roomInfo)
           eventBus.$emit('setRoom', this.roomInfo)
         } else {
           this.$alert('您没有权限进入此教室', '警告', {
@@ -50,7 +49,8 @@ export default {
               this.$store.dispatch('tagsView/delView', this.$route)
               this.$router.go(-1)
             }
-          })
+          }
+          )
         }
       })
     }

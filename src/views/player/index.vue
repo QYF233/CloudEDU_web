@@ -22,6 +22,7 @@
           <!--          <Main/>-->
         </el-main>
         <el-footer>
+          <el-button v-permission="['teacher','admin']" @click="startPublish">开始直播</el-button>
           <!--          <div class="appendix">-->
           <!--            附件区-->
           <!--          </div>-->
@@ -38,9 +39,10 @@ import SetRoom from './components/SetRoom'
 import Socket from './components/Socket'
 import { eventBus } from '@/main'
 import store from '@/store'
-
+import permission from '@/directive/permission'
 export default {
   name: 'Player',
+  directives: { permission },
   components: {
     Nav,
     Main,
@@ -64,7 +66,16 @@ export default {
       this.form = res
     })
   },
-  methods: {}
+  methods: {
+    startPublish() {
+      this.$router.push({
+        name: 'publish',
+        params: {
+          roomId: this.$route.query.roomId
+        }
+      })
+    }
+  }
 }
 </script>
 <style lang="scss">

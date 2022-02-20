@@ -81,6 +81,8 @@ export default {
       loadState: false,
       // 计时器
       time: '',
+      // 是否屏幕共享
+      screenState: false,
       resolution: '',
       resolutionOptions: [
         { label: '超清', value: 1920 },
@@ -141,7 +143,7 @@ export default {
     }
   },
   async created() {
-    console.log('222')
+    // console.log('222')
     // 教室初始化状态
     eventBus.$on('infoStatus', (infoStatus) => {
       this.infoStatus = infoStatus
@@ -149,7 +151,7 @@ export default {
     // 教室信息
     eventBus.$on('setRoom', (roomInfo) => {
       this.roomInfo = roomInfo
-      console.log(roomInfo)
+      // console.log(roomInfo)
     })
     // 聊天室状态
     eventBus.$on('socketState', (socketState) => {
@@ -195,12 +197,12 @@ export default {
         }
       }
       if (!navigator.mediaDevices || !navigator.mediaDevices.enumerateDevices) {
-        console.log('不支持获取设备信息！')
+        // console.log('不支持获取设备信息！')
       } else {
         navigator.mediaDevices.enumerateDevices()
           .then(this.showDevice)
           .catch((err) => {
-            console.log(err.name + ':' + err.message)
+            // console.log(err.name + ':' + err.message)
           })
       }
     },
@@ -235,7 +237,7 @@ export default {
         this.constraints.video.width = 640
         this.constraints.video.height = 480
       }
-      console.log('更换分辨率', this.constraints)
+      // console.log('更换分辨率', this.constraints)
       this.videoLoader()
     },
 
@@ -245,6 +247,9 @@ export default {
       if (this.checkDevice()) {
         if (this.getUserMedia()) {
           _this.loadState = true
+          if (this.liveState) {
+            this.reloadPublish()
+          }
           return true
         }
       }
@@ -277,11 +282,15 @@ export default {
     },
     // 检查设备
     checkDevice() {
+      if (this.screenState) {
+        return true
+      }
       if (this.audioDeviceId) {
         this.constraints.audio = { deviceId: { exact: this.audioDeviceId } }
       } else {
         this.constraints.audio = false
       }
+
       if (this.videoDeviceId) {
         this.constraints.video = {
           deviceId: { exact: this.videoDeviceId },
@@ -300,6 +309,9 @@ export default {
     },
     // 设置媒体流
     async getUserMedia() {
+      if (this.screenState) {
+        return true
+      }
       if ('mediaDevices' in navigator) {
         try {
           const stream = await navigator.mediaDevices.getUserMedia(this.constraints)
@@ -318,9 +330,38 @@ export default {
       // var sdk = null
       this.sdk = new SrsRtcPublisherAsync()
       this.sdk.constraints = this.constraints
-      console.log(this.sdk.constraints)
-      this.sdk.publish(this.roomInfo.liveUrl).then(function(session) {
-        console.log(session)
+      // console.log('推流：', this.sdk.constraints)
+      this.sdk.publish(this.roomInfo.liveUrl, this.myVideo.srcObject).then(function(session) {
+        // console.log(session)
+        _this.publishState = '推流中'
+        _this.$message.success('推流中...')
+        eventBus.$emit('timeStart', true)
+        _this.liveState = true
+        _this.loading = false
+      }).catch(function(reason) {
+        _this.sdk.close()
+        _this.publishState = ''
+        _this.$message.error('推流失败！')
+        _this.loading = false
+        // console.log(reason)
+      })
+    },
+    stopPublish() {
+      this.sdk.close()
+      this.liveState = false
+      this.publishState = ''
+      eventBus.$emit('timeStart', false)
+      // this.myVideo.srcObject = {}
+    },
+    reloadPublish() {
+      this.sdk.close()
+      const _this = this
+      // var sdk = null
+      this.sdk = new SrsRtcPublisherAsync()
+      this.sdk.constraints = this.constraints
+      // console.log('重新推流：', this.sdk.constraints)
+      this.sdk.publish(this.roomInfo.liveUrl, this.myVideo.srcObject).then(function(session) {
+        // console.log(session)
         _this.publishState = '推流中'
         _this.$message.success('推流中...')
         eventBus.$emit('timeStart', true)
@@ -334,13 +375,7 @@ export default {
         console.log(reason)
       })
     },
-    stopPublish() {
-      this.sdk.close()
-      this.liveState = false
-      this.publishState = ''
-      eventBus.$emit('timeStart', false)
-      // this.myVideo.srcObject = {}
-    },
+
     // 其他设置
     // 进行屏幕共享
     async startCapture() {
@@ -349,11 +384,11 @@ export default {
     },
     // 1.获取屏幕流
     async getDisplayMedia() {
+      const _this = this
       // 老的浏览器可能根本没有实现 mediaDevices，所以我们可以先设置一个空的对象
       if (navigator.mediaDevices === undefined) {
         navigator.mediaDevices = {}
       }
-
       // 一些浏览器部分支持 mediaDevices。我们不能直接给对象设置 getUserMedia
       // 因为这样可能会覆盖已有的属性。这里我们只会在没有getUserMedia属性的时候添加它。
       if (navigator.mediaDevices.getUserMedia === undefined) {
@@ -377,16 +412,28 @@ export default {
       // chrome://flags/#enable-experimental-web-platform-features
       // getDisplayMedia无法同时采集音频
       let captureStream = null
+      this.constraints = { audio: {}, video: {} }
       if (this.constraints.video === false) {
         this.constraints.video = true
       }
       this.constraints.video.height = 1080
       this.constraints.video.width = 1920
       this.constraints.video.frameRate = 60
+
+      // console.log('屏幕：', this.constraints)
       try {
-        captureStream = await navigator.mediaDevices.getDisplayMedia(this.constraints)
+        captureStream = await navigator.mediaDevices.getDisplayMedia(this.constraints).then(stream => {
+          stream.getVideoTracks()[0].onended = () => {
+            // console.log('停止共享')
+            _this.sdk.close()
+          }
+        })
         if ('srcObject' in this.myVideo) {
           this.myVideo.srcObject = captureStream
+          this.screenState = true
+          if (this.liveState) {
+            this.reloadPublish()
+          }
         } else {
           // 防止在新的浏览器里使用它，应为它已经不再支持了
           this.myVideo.src = window.URL.createObjectURL(captureStream)
@@ -401,8 +448,8 @@ export default {
     getAudioVideo() {
       const videoTrack = this.localStream.getVideoTracks()[0]
       const audioTrack = this.localStream.getAudioTracks()
-      console.log(videoTrack)
-      console.log(audioTrack)
+      // console.log(videoTrack)
+      // console.log(audioTrack)
       const videoConstraintsData = videoTrack.getSettings()
       // console.log(videoConstraintsData)
       this.videoConstraints = JSON.stringify(videoConstraintsData, null, 4)
@@ -412,9 +459,9 @@ export default {
     // 关闭房间
     closeRoom() {
       closeRoom(this.roomId).then(res => {
-        console.log(res)
+        // console.log(res)
       }).catch(res => {
-        console.log(res)
+        // console.log(res)
       })
     }
   }

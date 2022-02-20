@@ -3,11 +3,17 @@
     <el-row :gutter="20">
       <!--视频-->
       <div style="height:450px">
-        <video id="rtc_media_player" ref="video" src="" style="width:100%;height:400px" controls autoplay
-               muted="muted"
+        <video
+          id="rtc_media_player"
+          ref="video"
+          src=""
+          style="width:100%;height:400px"
+          controls
+          autoplay
+          muted="muted"
         />
-        {{ infoStatus }}
-        <Time></Time>
+        <!--        {{ infoStatus }}-->
+        <Time />
         {{ publishState }}
       </div>
     </el-row>
@@ -167,7 +173,6 @@ export default {
       //   _this.$message.info('当前教室未开播')
       //   console.error(reason)
       // })
-
     },
 
     // 关闭房间

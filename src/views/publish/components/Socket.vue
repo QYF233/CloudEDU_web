@@ -86,10 +86,10 @@ export default {
       console.log('WebSocket连接成功')
       this.myMsg = '您已加入直播间'
       sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-        console.log(res)
+        // console.log(res)
         this.myMsg = ''
       }).catch(e => console.log)
-      console.log(this.textarea)
+      // console.log(this.textarea)
       this.liveState = '停止直播'
       this.state = true
       eventBus.$emit('socketState', true)
@@ -106,10 +106,10 @@ export default {
       this.state = false
       this.myMsg = '直播已关闭'
       sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-        console.log(res)
+        // console.log(res)
         this.myMsg = ''
       }).catch(e => console.log)
-      console.log('连接关闭 (' + e.code + ')')
+      // console.log('连接关闭 (' + e.code + ')')
       eventBus.$emit('socketState', false)
     },
     sendMessage() {
@@ -117,10 +117,10 @@ export default {
         if (this.myMsg !== '') {
           this.myMsg = this.roomInfo.username + '：' + this.myMsg
           sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-            console.log(res)
+            // console.log(res)
             this.myMsg = ''
           }).catch(e => console.log)
-          console.log(this.textarea)
+          // console.log(this.textarea)
         } else {
           this.$message.error('输入内容不能为空')
         }
