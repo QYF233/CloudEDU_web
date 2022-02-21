@@ -33,7 +33,7 @@
 
 <script>
 import store from '@/store'
-import { searchRoom } from '@/api/user'
+import { fndPublicRoom, searchRoom } from '@/api/user'
 import Pagination from '@/components/Pagination'
 
 export default {
@@ -78,7 +78,7 @@ export default {
     },
     getList() {
       // 获取数据
-      searchRoom(this.listQuery).then(res => {
+      fndPublicRoom(this.listQuery).then(res => {
         const { list, total } = res.data
         console.log(list)
         this.roomList = list

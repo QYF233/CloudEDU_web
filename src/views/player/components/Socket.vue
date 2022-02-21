@@ -2,7 +2,7 @@
   <!--  <el-col :span="6">-->
   <div class="comment">
     <div class="comment-area">
-      <p v-for="i in chatList" :key="i.index">{{ i }}</p>
+      <p class="chatList" v-for="i in chatList" ref="chatList" :key="i.index">{{ i }}</p>
     </div>
     <div class="send-area">
       <el-input
@@ -63,6 +63,15 @@ export default {
       this.initWebSocket()
     })
   },
+
+  updated() {
+    let scrollContainer = document.querySelector('.chatList')
+    scrollContainer.scrollTop = scrollContainer.scrollHeight
+  },
+  mounted() {
+    this.scrollToBottom()
+  },
+
   methods: {
     initWebSocket: function() {
       if (this.roomInfo.roomId !== '') {
@@ -111,12 +120,14 @@ export default {
       eventBus.$emit('socketState', false)
     },
     sendMessage() {
+      const _this = this
       if (this.state) {
         if (this.myMsg !== '') {
           this.myMsg = this.roomInfo.username + '：' + this.myMsg
           sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
             // console.log(res)
-            this.myMsg = ''
+            _this.myMsg = ''
+            _this.$refs.chatList.scrollTop = _this.$refs.chatList.scrollHeight
           }).catch(e => console.log)
         } else {
           this.$message.error('输入内容不能为空')
@@ -125,6 +136,11 @@ export default {
         console.log('您未连接')
       }
     }
+  },
+  scrollToBottom() {
+    this.$nextTick(() => {
+      this.$refs.chatList.scrollTop = this.$refs.chatList.scrollHeight
+    })
   }
 
 }
@@ -147,6 +163,7 @@ export default {
   //border: 10px solid #9898a4;
   height: 400px;
   width: 100%;
+  overflow: hidden;
 
   .comment-area {
     /**修改全局的滚动条*/

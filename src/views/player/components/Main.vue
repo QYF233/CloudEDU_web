@@ -13,8 +13,8 @@
           muted="muted"
         />
         <!--        {{ infoStatus }}-->
-        <Time />
-        {{ publishState }}
+        <Time/>
+<!--        {{ publishState }}-->
       </div>
     </el-row>
   </div>
@@ -61,32 +61,10 @@ export default {
       // 计时器
       time: '',
       resolution: '',
-      resolutionOptions: [
-        { label: '超清', value: 1920 },
-        { label: '高清', value: 1024 },
-        { label: '标清', value: 640 }],
-
       sdk: undefined,
 
       // videos
       myVideo: {},
-
-      // source
-      audioSourceOption: [{ text: '无麦克风', value: '' }],
-      audioOutputOption: [{ text: '无麦克风', value: '' }],
-      videoSourceOption: [{ text: '无摄像头', value: '' }],
-
-      // 设备id
-      audioDeviceId: '',
-      videoDeviceId: '',
-
-      // Constraints(媒体约束)
-      videoConstraints: '',
-
-      // record
-      recordBtnText: 'start record',
-      recordPlayFlag: false,
-      downloadRecordFlag: false,
 
       // Media config
       constraints: {
@@ -127,10 +105,6 @@ export default {
   destroyed() {
   },
   methods: {
-    // 中期：加载视频
-    videoLoader() {
-      const _this = this
-    },
 
     // 设置媒体流
     async getUserMedia() {
@@ -161,18 +135,6 @@ export default {
         _this.$message.info('当前教室未开播')
         console.error(reason)
       })
-
-      // var sdk = null
-      // sdk = new SrsRtcPlayerAsync()
-      // sdk.play(this.liveUrl).then(function(session) {
-      //   _this.myVideo.srcObject = _this.sdk.stream
-      //
-      //   console.error(session)
-      // }).catch(function(reason) {
-      //   sdk.close()
-      //   _this.$message.info('当前教室未开播')
-      //   console.error(reason)
-      // })
     },
 
     // 关闭房间

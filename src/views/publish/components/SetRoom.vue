@@ -24,6 +24,12 @@
               />
             </el-col>
           </el-form-item>
+          <el-form-item label="是否公开：" :label-width="formLabelWidth" prop="state">
+            <el-col :span="18">
+              <el-radio v-model="roomInfo.state" label="0">否</el-radio>
+              <el-radio v-model="roomInfo.state" label="1">是</el-radio>
+            </el-col>
+          </el-form-item>
           <el-form-item label="课程名称：" :label-width="formLabelWidth" prop="roomName">
             <el-col :span="18">
               <el-input v-model="roomInfo.roomName" autocomplete="off" maxlength="15"/>
@@ -60,12 +66,16 @@ export default {
         roomId: '',
         roomName: '',
         introduction: '',
-        liveUrl: ''
+        liveUrl: '',
+        state: ''
       },
       options: [],
       formLabelWidth: '100px',
       activeNames: ['1'],
       rules: {
+        state: [
+          { required: true, message: '请选择教室状态（是否设为公开课）', trigger: 'blur' }
+        ],
         roomName: [
           { required: true, message: '请输入教室名（课程名）', trigger: 'blur' },
           { min: 2, max: 15, message: '长度在 2 到 15 个字符', trigger: 'blur' }
@@ -94,13 +104,13 @@ export default {
       if (id != null) {
         this.roomInfo.roomId = id
         getRoomInfo(id).then(res => {
-
           var { room } = res.data
           console.log('info:', room)
           this.roomInfo.roomId = room.id
           this.roomInfo.roomName = room.name
           this.roomInfo.introduction = room.note
           this.roomInfo.liveUrl = room.liveUrl
+          this.roomInfo.state = room.state
         })
       } else {
         this.init()

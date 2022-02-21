@@ -8,7 +8,7 @@
       <el-input
         v-model="myMsg"
         type="input"
-        :rows="2"
+        :rows="10"
         placeholder="请输入内容"
         class="send-message"
         show-word-limit
@@ -146,8 +146,8 @@ export default {
 }
 
 .comment {
-  background-color: #a8a6a6;
-  //border: 10px solid #9898a4;
+  background-color: #f8f8f8;
+  border: 1px solid #9898a4;
   height: 400px;
   width: 100%;
 
@@ -163,12 +163,14 @@ export default {
 
   .send-area {
 
-    background-color: #97a8be;
+    background-color: #ffffff;
+    border-top: 1px solid #9898a4;
     padding: 8px 8px;
     height: 27%;
 
     .send-message {
       width: 100%;
+      height: 47px;
       margin-bottom: 5px;
     }
 

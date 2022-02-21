@@ -33,6 +33,7 @@ export function setRoomInfo(roomInfo) {
       name: roomInfo.roomName,
       note: roomInfo.introduction,
       classes: roomInfo.classId,
+      state: roomInfo.state,
       uid: roomInfo.uid
     }
   })

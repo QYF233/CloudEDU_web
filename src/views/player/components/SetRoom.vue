@@ -18,7 +18,8 @@ export default {
         roomId: this.$route.query.roomId,
         roomName: '',
         introduction: '',
-        liveUrl: ''
+        liveUrl: '',
+        status: ''
       }
     }
   },
