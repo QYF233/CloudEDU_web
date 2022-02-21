@@ -120,7 +120,7 @@ export default {
         }
       }
     },
-    // 推流
+    // 播放
     startPlayer(url) {
       const _this = this
       this.sdk = new SrsRtcPlayerAsync()

@@ -2,13 +2,13 @@
   <!--  <el-col :span="6">-->
   <div class="comment">
     <div class="comment-area">
-      <p class="chatList" v-for="i in chatList" ref="chatList" :key="i.index">{{ i }}</p>
+      <p v-for="i in chatList" :key="i.index">{{ i }}</p>
     </div>
     <div class="send-area">
       <el-input
         v-model="myMsg"
         type="input"
-        :rows="2"
+        :rows="10"
         placeholder="请输入内容"
         class="send-message"
         show-word-limit
@@ -60,18 +60,11 @@ export default {
       this.socketUrl = roomInfo.socketUrl
       this.roomInfo = roomInfo
       // console.log(roomInfo)
-      this.initWebSocket()
+      setTimeout(() => {
+        this.initWebSocket()
+      }, 1000)
     })
   },
-
-  updated() {
-    let scrollContainer = document.querySelector('.chatList')
-    scrollContainer.scrollTop = scrollContainer.scrollHeight
-  },
-  mounted() {
-    this.scrollToBottom()
-  },
-
   methods: {
     initWebSocket: function() {
       if (this.roomInfo.roomId !== '') {
@@ -92,7 +85,7 @@ export default {
       console.log('WebSocket连接成功')
       this.myMsg = '您已加入直播间'
       sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
-        // console.log(res)
+        console.log(res)
         this.myMsg = ''
       }).catch(e => console.log)
       // console.log(this.textarea)
@@ -107,7 +100,7 @@ export default {
     },
     websocketonmessage: function(e) {
       this.chatList.push(e.data)
-      // console.log(e.data)
+      console.log('收到消息：' + e.data)
     },
     websocketclose: function(e) {
       this.state = false
@@ -120,14 +113,12 @@ export default {
       eventBus.$emit('socketState', false)
     },
     sendMessage() {
-      const _this = this
       if (this.state) {
         if (this.myMsg !== '') {
           this.myMsg = this.roomInfo.username + '：' + this.myMsg
           sendMsg(this.roomInfo.roomId, this.myMsg).then(res => {
             // console.log(res)
-            _this.myMsg = ''
-            _this.$refs.chatList.scrollTop = _this.$refs.chatList.scrollHeight
+            this.myMsg = ''
           }).catch(e => console.log)
         } else {
           this.$message.error('输入内容不能为空')
@@ -159,11 +150,10 @@ export default {
 }
 
 .comment {
-  background-color: #a8a6a6;
-  //border: 10px solid #9898a4;
+  background-color: #f8f8f8;
+  border: 1px solid #9898a4;
   height: 400px;
   width: 100%;
-  overflow: hidden;
 
   .comment-area {
     /**修改全局的滚动条*/
@@ -177,12 +167,14 @@ export default {
 
   .send-area {
 
-    background-color: #97a8be;
+    background-color: #ffffff;
+    border-top: 1px solid #9898a4;
     padding: 8px 8px;
     height: 27%;
 
     .send-message {
       width: 100%;
+      height: 47px;
       margin-bottom: 5px;
     }
 
